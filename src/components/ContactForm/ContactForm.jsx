@@ -1,5 +1,4 @@
 import { useState, useRef } from 'react';
-import propTypes from 'prop-types';
 import { nanoid } from 'nanoid';
 import {
   Form,
@@ -10,11 +9,15 @@ import {
   Message,
 } from './ContactForm.styled.jsx';
 
+import { useDispatch, useSelector } from 'react-redux';
+import { addContact } from 'redux/contactsSlice.js';
+import { getContacts } from 'redux/contactsSlice.js';
+
 const FormError = ({ message }) => {
   return <Message>{message}</Message>;
 };
 
-export const ContactForm = ({ isContactExist, onSubmit }) => {
+export const ContactForm = () => {
   const [name, setName] = useState('');
   const [number, setNumber] = useState('');
   const [nameError, setNameError] = useState(null);
@@ -24,22 +27,19 @@ export const ContactForm = ({ isContactExist, onSubmit }) => {
   const telInputId = nanoid();
   const submitButton = useRef();
 
+  const dispatch = useDispatch();
+  const contacts = useSelector(getContacts);
+
   const handleChange = event => {
     const { name, value } = event.currentTarget;
     switch (name) {
       case 'name':
         setName(value);
+        setNameError(null);
         break;
 
       case 'number':
         setNumber(value);
-        break;
-
-      case 'nameError':
-        setNameError(null);
-        break;
-
-      case 'numberError':
         setNumberError(null);
         break;
 
@@ -74,7 +74,7 @@ export const ContactForm = ({ isContactExist, onSubmit }) => {
       return;
     }
 
-    onSubmit(name, number);
+    dispatch(addContact(name, number));
     reset();
     submitButton.current.focus();
   };
@@ -82,6 +82,13 @@ export const ContactForm = ({ isContactExist, onSubmit }) => {
   const reset = () => {
     setName('');
     setNumber('');
+  };
+
+  const isContactExist = name => {
+    const isExist = contacts.some(
+      contact => contact.name.toLowerCase() === name.toLowerCase()
+    );
+    return isExist;
   };
 
   return (
@@ -121,9 +128,4 @@ export const ContactForm = ({ isContactExist, onSubmit }) => {
       </Button>
     </Form>
   );
-};
-
-ContactForm.propTypes = {
-  onSubmit: propTypes.func.isRequired,
-  isContactExist: propTypes.func.isRequired,
 };
